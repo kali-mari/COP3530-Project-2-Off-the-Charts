@@ -8,11 +8,13 @@ from cli import get_user_input, find_song
 df = load_data()
 matrix = get_feature_matrix(df)
 
+# welcome screen 
 print("Welcome to Off The Charts!")
 print("Press Ctrl+C at any time to exit.\n")
 structChoice = 0 # 1 = k-d tree, 2 = max heap
 
 while True:
+    # select an algorithim to use
     print("Select search algorithm:")
     print("  1. K-d Tree")
     print("  2. Max Heap")
@@ -41,7 +43,6 @@ while True:
 
         if song is not None:
             print(f"\nFound: {song['track_name']} by {song['artists']}")
-            # hand off to Person 2 or 3 here
 
             #find nearest songs, return in a list
 

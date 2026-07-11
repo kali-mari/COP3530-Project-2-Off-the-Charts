@@ -2,7 +2,11 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 
 def build_completers(df):
-    title_completer = WordCompleter(df['track_name'].dropna().unique().tolist(), ignore_case=True)
+    title_completer = WordCompleter(
+        df['track_name'].dropna().unique().tolist(),
+        ignore_case=True,
+        sentence=True  # treats the whole input as one search term
+    )
     return title_completer
 
 def get_user_input(df):
@@ -22,7 +26,11 @@ def get_user_input(df):
     for a in artists:
         print(f"  {a}")
 
-    artist_completer = WordCompleter(artists, ignore_case=True)
+    artist_completer = WordCompleter(
+        title_matches['artists'].dropna().unique().tolist(),
+        ignore_case=True,
+        sentence=True
+    )
 
     # loop until a valid artist is entered
     while True:
