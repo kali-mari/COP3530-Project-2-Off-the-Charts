@@ -7,7 +7,7 @@ FEATURE_COLS = [
     'liveness', 'valence', 'tempo', 'time_signature'
 ]
 
-def load_data(filepath='data/dataset.csv'):
+def load_data(filepath='../data/dataset.csv'):
     df = pd.read_csv(filepath)
     df = df.dropna(subset=FEATURE_COLS)
     return df
