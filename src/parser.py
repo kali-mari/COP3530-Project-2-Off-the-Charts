@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 FEATURE_COLS = [
     'danceability', 'energy', 'key', 'loudness', 'mode',
@@ -7,10 +8,12 @@ FEATURE_COLS = [
     'liveness', 'valence', 'tempo', 'time_signature'
 ]
 
-def load_data(filepath='data/dataset.csv'):
-    # reads through each line in CSV file
+def load_data():
+    # builds the path relative to this file's location, not wherever you run from
+    base_dir = os.path.dirname(os.path.dirname(__file__))
+    filepath = os.path.join(base_dir, 'data', 'dataset.csv')
+    
     df = pd.read_csv(filepath)
-    # removes rows where feature column is empty
     df = df.dropna(subset=FEATURE_COLS)
     return df
 
