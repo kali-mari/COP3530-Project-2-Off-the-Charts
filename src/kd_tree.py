@@ -61,8 +61,6 @@ def nearest(root, target, best=None):
 
     return best
 
-
-
 df = parser.load_data()
 matrix = parser.get_feature_matrix(df)
 tracks = list(enumerate(matrix))
