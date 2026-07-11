@@ -14,7 +14,7 @@ def feature_row_to_list(row, feature_cols=FEATURE_COLS):
 
 
 def feature_vector_distance(query_vector, candidate_vector):
-   
+   # turn both vectors into numpy arrays so we can do math on them
     query_array = np.asarray(query_vector, dtype=float)
     candidate_array = np.asarray(candidate_vector, dtype=float)
 
@@ -27,6 +27,7 @@ def feature_vector_distance(query_vector, candidate_vector):
 
 
 def feature_distance(query_vector, candidate_vector):
+    # just a thin wrapper so the heap code has a short name to call
     return feature_vector_distance(query_vector, candidate_vector)
 
 
@@ -56,6 +57,8 @@ def find_query_song(df, title, track_name_col='track_name'):
 
 
 def build_index_feature_pairs(df, feature_cols=FEATURE_COLS):
+    # precompute (row index, feature vector) pairs once so we don't rebuild
+    # the vector for every song on every k nearest 
    
     indexed_features = []
     for row_index, row in df.iterrows():
@@ -65,7 +68,9 @@ def build_index_feature_pairs(df, feature_cols=FEATURE_COLS):
 
 
 def find_k_nearest(query_index, query_vector, song_vectors, k=5):
-
+    # k nearest neighbors using a max-heap of size k
+    # heap holds the k closest songs seen so far, with the farthest on top
+    
     if k <= 0:
         return []
 
