@@ -56,45 +56,6 @@ def find_query_song(df, title, track_name_col='track_name'):
     return selected_index, feature_vector
 
 
-def build_index_feature_pairs(df, feature_cols=FEATURE_COLS):
-    # precompute (row index, feature vector) pairs once so we don't rebuild
-    # the vector for every song on every k nearest 
-   
-    indexed_features = []
-    for row_index, row in df.iterrows():
-        feature_vector = tuple(feature_row_to_list(row, feature_cols=feature_cols))
-        indexed_features.append((row_index, feature_vector))
-    return indexed_features
-
-
-def find_k_nearest(query_index, query_vector, song_vectors, k=5):
-    # k nearest neighbors using a max-heap of size k
-    # heap holds the k closest songs seen so far, with the farthest on top
-    
-    if k <= 0:
-        return []
-
-    heap = []
-    for index, vector in song_vectors:
-        if index == query_index:
-            continue
-
-        distance = feature_distance(query_vector, vector)
-        heap_item = (-distance, index)
-
-        if len(heap) < k:
-            heapq.heappush(heap, heap_item)
-        elif distance < -heap[0][0]:
-            heapq.heapreplace(heap, heap_item)
-
-    results = []
-    while heap:
-        neg_distance, index = heapq.heappop(heap)
-        results.append((index, -neg_distance))
-
-    results.reverse()
-    return results
-
 DEFAULT_MINMAX_COLS = [
     'danceability', 'energy', 'speechiness', 'acousticness',
     'instrumentalness', 'liveness', 'valence', 'key', 'time_signature'
