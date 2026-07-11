@@ -97,9 +97,3 @@ def n_nearest(root, target, n, best=None):
 # index from the returned best songs, can be accessed with
 # n_nearest[top_n][1].index and use this index to locate song name, artist name, etc.
 # using .iloc[index]
-
-df = parser.load_data()
-matrix = parser.get_feature_matrix(df)
-tracks = list(enumerate(matrix))
-
-tree = build_tree(tracks)

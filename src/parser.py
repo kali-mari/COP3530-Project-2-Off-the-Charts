@@ -76,7 +76,7 @@ DEFAULT_ZSCORE_COLS = ['tempo', 'loudness']
 def load_data(filepath=None, impute_time_sig=True, genre_col='track_genre'):
     if filepath is None:
         base_dir = os.path.dirname(os.path.dirname(__file__))
-        filepath = os.path.join(base_dir, 'data', 'dataset.csv')
+        filepath = os.path.join(base_dir, 'data', 'dataset_clean.csv')
 
     df = pd.read_csv(filepath)
     df = df.dropna(subset=FEATURE_COLS)
