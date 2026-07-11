@@ -8,7 +8,9 @@ FEATURE_COLS = [
 ]
 
 def load_data(filepath='data/dataset.csv'):
+    # reads through each line in CSV file
     df = pd.read_csv(filepath)
+    # removes rows where feature column is empty
     df = df.dropna(subset=FEATURE_COLS)
     return df
 
