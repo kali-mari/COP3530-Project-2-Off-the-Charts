@@ -160,7 +160,7 @@ def normalize_features(df, minmax_cols=None, zscore_cols=None, impute_time_sig=F
 
 def prepare_song_database(filepath=None, impute_time_sig=True, genre_col='track_genre'):
     
-    #  onvenience one stop function for main.py
+    #  convenience one stop function for main.py
     
     df = load_data(filepath=filepath, impute_time_sig=impute_time_sig, genre_col=genre_col)
     df, scalers = normalize_features(df, impute_time_sig=False, genre_col=genre_col)
