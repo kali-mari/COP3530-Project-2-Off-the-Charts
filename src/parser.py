@@ -56,6 +56,16 @@ def find_query_song(df, title, track_name_col='track_name'):
     return selected_index, feature_vector
 
 
+def build_index_feature_pairs(df, feature_cols=FEATURE_COLS):
+    #turns the whole dataframe into the (index, feature_vector) pairs that
+    #find_k_nearest expects as its song_vectors argument.
+    
+    return [
+        (index, feature_row_to_list(row, feature_cols))
+        for index, row in df[feature_cols].iterrows()
+    ]
+
+
 DEFAULT_MINMAX_COLS = [
     'danceability', 'energy', 'speechiness', 'acousticness',
     'instrumentalness', 'liveness', 'valence', 'key', 'time_signature'
@@ -146,3 +156,13 @@ def normalize_features(df, minmax_cols=None, zscore_cols=None, impute_time_sig=F
         scalers['zscore'] = zs
 
     return df, scalers
+
+
+def prepare_song_database(filepath=None, impute_time_sig=True, genre_col='track_genre'):
+    
+    #  onvenience one stop function for main.py
+    
+    df = load_data(filepath=filepath, impute_time_sig=impute_time_sig, genre_col=genre_col)
+    df, scalers = normalize_features(df, impute_time_sig=False, genre_col=genre_col)
+    song_vectors = build_index_feature_pairs(df)
+    return df, song_vectors, scalers
