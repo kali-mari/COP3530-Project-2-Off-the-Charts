@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import heapq
 
 FEATURE_COLS = [
     'danceability', 'energy', 'key', 'loudness', 'mode',
@@ -7,9 +8,100 @@ FEATURE_COLS = [
     'liveness', 'valence', 'tempo', 'time_signature'
 ]
 
-def load_data(filepath='../data/dataset.csv'):
+
+def feature_row_to_list(row, feature_cols=FEATURE_COLS):
+    return [row[col] for col in feature_cols]
+
+
+def feature_vector_distance(query_vector, candidate_vector):
+   
+    query_array = np.asarray(query_vector, dtype=float)
+    candidate_array = np.asarray(candidate_vector, dtype=float)
+
+    if query_array.shape != candidate_array.shape:
+        raise ValueError('query_vector and candidate_vector must have the same shape')
+    if query_array.shape != (len(FEATURE_COLS),):
+        raise ValueError(f'feature vectors must have length {len(FEATURE_COLS)}')
+
+    return float(np.linalg.norm(query_array - candidate_array))
+
+
+def feature_distance(query_vector, candidate_vector):
+    return feature_vector_distance(query_vector, candidate_vector)
+
+
+def find_query_song(df, title, track_name_col='track_name'):
+
+    if track_name_col not in df.columns:
+        raise ValueError(f"'{track_name_col}' column was not found in the dataframe")
+
+    normalized_title = str(title).strip().lower()
+    track_names = df[track_name_col].astype(str).str.strip().str.lower()
+    matching_df = df.loc[track_names == normalized_title]
+
+    if matching_df.empty:
+        raise ValueError(
+            f"No song found with title '{title}' in column '{track_name_col}'"
+        )
+
+    if len(matching_df) > 1:
+        print(f"Multiple songs matched '{title}'. Using the first match:")
+        for row_index, row in matching_df.iterrows():
+            artists = row['artists'] if 'artists' in matching_df.columns else 'Unknown artist'
+            print(f"- index {row_index}: {row[track_name_col]} by {artists}")
+
+    selected_index, selected_row = next(iter(matching_df.iterrows()))
+    feature_vector = feature_row_to_list(selected_row)
+    return selected_index, feature_vector
+
+
+def build_index_feature_pairs(df, feature_cols=FEATURE_COLS):
+   
+    indexed_features = []
+    for row_index, row in df.iterrows():
+        feature_vector = tuple(feature_row_to_list(row, feature_cols=feature_cols))
+        indexed_features.append((row_index, feature_vector))
+    return indexed_features
+
+
+def find_k_nearest(query_index, query_vector, song_vectors, k=5):
+
+    if k <= 0:
+        return []
+
+    heap = []
+    for index, vector in song_vectors:
+        if index == query_index:
+            continue
+
+        distance = feature_distance(query_vector, vector)
+        heap_item = (-distance, index)
+
+        if len(heap) < k:
+            heapq.heappush(heap, heap_item)
+        elif distance < -heap[0][0]:
+            heapq.heapreplace(heap, heap_item)
+
+    results = []
+    while heap:
+        neg_distance, index = heapq.heappop(heap)
+        results.append((index, -neg_distance))
+
+    results.reverse()
+    return results
+
+DEFAULT_MINMAX_COLS = [
+    'danceability', 'energy', 'speechiness', 'acousticness',
+    'instrumentalness', 'liveness', 'valence', 'key', 'time_signature'
+]
+
+DEFAULT_ZSCORE_COLS = ['tempo', 'loudness']
+
+def load_data(filepath='data/dataset.csv', impute_time_sig=True, genre_col='track_genre'):
     df = pd.read_csv(filepath)
     df = df.dropna(subset=FEATURE_COLS)
+    if impute_time_sig:
+        df, _ = impute_time_signature_by_genre(df, genre_col=genre_col)
     return df
 
 def get_feature_matrix(df):
@@ -18,3 +110,69 @@ def get_feature_matrix(df):
     maxs = matrix.max(axis=0)
     normalized = (matrix - mins) / (maxs - mins + 1e-8)
     return normalized
+
+
+def impute_time_signature_by_genre(df, genre_col='track_genre'):
+    if 'time_signature' not in df.columns:
+        return df, {}
+ 
+    valid = df[df['time_signature'].astype(float) != 0]
+    medians = {}
+    if not valid.empty and genre_col in valid.columns:
+        medians = valid.groupby(genre_col)['time_signature'].median().to_dict()
+ 
+    try:
+        global_median = int(valid['time_signature'].median()) if not valid.empty else 4
+    except Exception:
+        global_median = 4
+
+    mask = df['time_signature'].astype(float) == 0
+    if genre_col in df.columns:
+        df.loc[mask, 'time_signature'] = (
+            df.loc[mask, genre_col].map(medians).fillna(global_median).astype(int)
+        )
+    else:
+        df.loc[mask, 'time_signature'] = global_median
+
+    return df, medians
+
+
+def apply_minmax_scaling(df, cols):
+
+    mins = df[cols].min()
+    maxs = df[cols].max()
+    denom = (maxs - mins).replace(0, 1e-8)
+    df[cols] = (df[cols] - mins) / denom
+    return df, {'mins': mins.to_dict(), 'maxs': maxs.to_dict()}
+
+
+def apply_zscore_scaling(df, cols):
+
+    means = df[cols].mean()
+    stds = df[cols].std()
+    stds = stds.replace(0, 1e-8)
+    df[cols] = (df[cols] - means) / stds
+    return df, {'means': means.to_dict(), 'stds': stds.to_dict()}
+
+
+def normalize_features(df, minmax_cols=None, zscore_cols=None, impute_time_sig=False, genre_col='track_genre'):
+   
+    scalers = {'minmax': {}, 'zscore': {}, 'impute': {}}
+    if impute_time_sig:
+        df, medians = impute_time_signature_by_genre(df, genre_col=genre_col)
+        scalers['impute'] = medians
+
+    if minmax_cols is None:
+        minmax_cols = DEFAULT_MINMAX_COLS
+    if zscore_cols is None:
+        zscore_cols = DEFAULT_ZSCORE_COLS
+
+    if minmax_cols:
+        df, mm = apply_minmax_scaling(df, minmax_cols)
+        scalers['minmax'] = mm
+
+    if zscore_cols:
+        df, zs = apply_zscore_scaling(df, zscore_cols)
+        scalers['zscore'] = zs
+
+    return df, scalers
