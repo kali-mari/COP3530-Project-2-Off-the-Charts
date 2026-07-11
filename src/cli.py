@@ -22,7 +22,7 @@ def get_user_input(df):
 
     # show available artists before prompting
     artists = title_matches['artists'].dropna().unique().tolist()
-    print("Artists for that title:")
+    print("\nArtists for that title:")
     for a in artists:
         print(f"  {a}")
 
@@ -67,3 +67,13 @@ def find_song(df, track_name, artist):
         return None
 
     return artist_matches.iloc[0]
+
+def display_song_traits(song):
+    mode = 'Major' if song['mode'] == 1 else 'Minor'
+    print(f"\n\t{song['track_name']} from {song['album_name']} by {song['artists']} ({song['track_genre']})")
+    print(f"\t  dance: {song['danceability']:.2f}  energy: {song['energy']:.2f}  "
+          f"valence: {song['valence']:.2f}  tempo: {song['tempo']:.1f} BPM  "
+          f"loudness: {song['loudness']:.1f} dB")
+    print(f"\t  acoustic: {song['acousticness']:.2f}  instrumental: {song['instrumentalness']:.2f}  "
+          f"live: {song['liveness']:.2f}  speech: {song['speechiness']:.2f}  "
+          f"key: {song['key']} {mode}  time: {song['time_signature']}/4")
