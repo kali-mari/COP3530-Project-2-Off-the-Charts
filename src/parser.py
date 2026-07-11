@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import heapq
+import os
 
 FEATURE_COLS = [
     'danceability', 'energy', 'key', 'loudness', 'mode',
@@ -63,7 +64,11 @@ DEFAULT_MINMAX_COLS = [
 
 DEFAULT_ZSCORE_COLS = ['tempo', 'loudness']
 
-def load_data(filepath='data/dataset.csv', impute_time_sig=True, genre_col='track_genre'):
+def load_data(filepath=None, impute_time_sig=True, genre_col='track_genre'):
+    if filepath is None:
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        filepath = os.path.join(base_dir, 'data', 'dataset.csv')
+
     df = pd.read_csv(filepath)
     df = df.dropna(subset=FEATURE_COLS)
     if impute_time_sig:
