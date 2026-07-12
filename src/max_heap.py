@@ -83,4 +83,3 @@ def find_k_nearest(query_index, query_vector, song_vectors, k=5):
  
     results.reverse()
     return results
- 

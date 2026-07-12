@@ -1,4 +1,5 @@
 import sys
+sys.stdout.reconfigure(encoding='utf-8')
 import os
 sys.path.append(os.path.dirname(__file__))
 
@@ -12,14 +13,20 @@ def main():
         df = load_data()
         matrix = get_feature_matrix(df)
 
-        print("Welcome to Off The Charts!")
+        print(r"""
+             _____  __  __ _____ _          _____ _                _       
+            |  _  |/ _|/ _|_   _| |        /  __ \ |              | |      
+            | | | | |_| |_  | | | |__   ___| /  \/ |__   __ _ _ __| |_ ___ 
+            | | | |  _|  _| | | | '_ \ / _ \ |   | '_ \ / _` | '__| __/ __|
+            \ \_/ / | | |   | | | | | |  __/ \__/\ | | | (_| | |  | |_\__ \
+             \___/|_| |_|   \_/ |_| |_|\___|\____/_| |_|\__,_|_|   \__|___/
+                ♫⋆｡♪ ₊˚♬ﾟ. Find your sound. Skip the charts. ♫⋆｡♪ ₊˚♬ﾟ.
+            """)
         print("Press Ctrl+C at any time to exit.\n")
 
-        print("Building data structures...")
         tracks = list(enumerate(matrix))
         tree = build_tree(tracks)
         song_vectors = [(i, tuple(row)) for i, row in enumerate(matrix)]
-        print("Ready!\n")
 
         while True:
             try:
@@ -56,14 +63,18 @@ def main():
                             print(f"  {i}. {similarity}% match:", end="")
                             display_song_traits(rec)
                             print()
-                        print("-" * 80 + "\n")
                     else:
-                        results = find_k_nearest(idx, target, song_vectors)
-                        print("\nTop 5 similar songs:")
+                        results = find_k_nearest(idx, target, song_vectors, k=6)
+                        results = [(rec_idx, dist) for rec_idx, dist in results if rec_idx != idx]
+                        results = results[:5]
+                        print("\nTop 5 similar songs (Max Heap):")
                         for i, (rec_idx, dist) in enumerate(results, 1):
                             rec = df.iloc[rec_idx]
                             similarity = round(100 / (1 + dist), 1)
-                            print(f"  {i}. {rec['track_name']} by {rec['artists']}  —  {similarity}% match")
+                            print(f"  {i}. {similarity}% match:", end="")
+                            display_song_traits(rec)
+                            print()
+                    print(" ♫⋆｡♪ ₊˚♬ﾟ." * 10 + "\n")
 
             except KeyboardInterrupt:
                 print("\nGoodbye!")
